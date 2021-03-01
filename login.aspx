@@ -43,7 +43,7 @@
 
             <asp:Button ID="Button1" runat="server" BorderStyle="None" Font-Size="X-Large" OnClick="btnLogin_onClick" Text="Log In" />
             <label>
-                <%--<input type="checkbox" checked="checked" name="rememberMe" /> Remember me--%>
+                <input type="checkbox" checked="checked" name="rememberMe" /> Remember me
             </label>
         </form>
         <a id="parData" runat="server"></a>
