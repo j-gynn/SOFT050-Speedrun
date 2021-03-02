@@ -1,4 +1,14 @@
 ﻿<%@ Page Language="C#" %>
+<%--<script runat="server">
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!this.Page.User.Identity.IsAuthenticated)
+        {
+            FormsAuthentication.RedirectToLoginPage();
+        }
+    }
+</script>--%>
+<%--Commented out to avoid having to authenticate *every time* I test something new--%>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -30,7 +40,7 @@
 <script>
     var difference;
     var len_req = [-3, -2, -2, -2]; //Used for calculating decimal places of time display
-    var refresh = 10; // How often the timer refreshes
+    var refresh = 1; // How often the timer refreshes
     var running = false;
     var timeNow;
     var timeStart;
@@ -74,6 +84,8 @@
 
     function btnSave_onClick() {
         document.getElementById("test").innerText = "Wanna save dis for the future, y'know?";
+        sessionStorage.setItem("saveTime", difference);
+        window.location.href = "~/saveTime.aspx";
     }
 
     function stopwatch() {
@@ -92,10 +104,6 @@
             seconds: Math.floor((difference / 1000) % 60),
             milliseconds: Math.floor(difference % 1000)
         }
-        displayTimes();
-    }
-
-    function displayTimes() {
         var i;
         for (i = 0; i < 4; i++) {
             res = zeros.concat(timing[units[i]]);
