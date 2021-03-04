@@ -85,7 +85,7 @@
     function btnSave_onClick() {
         document.getElementById("test").innerText = "Wanna save dis for the future, y'know?";
         sessionStorage.setItem("saveTime", difference);
-        window.location.href = "~/saveTime.aspx";
+        window.location.href = "saveTime.aspx";
     }
 
     function stopwatch() {
