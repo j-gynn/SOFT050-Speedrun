@@ -7,13 +7,18 @@
     //public class GamesDatabase 
 
 
-    void Page_Load() {
+    public static class Global
+    {
+        public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    }
+
+    private void Page_Load() {
         if (!IsPostBack)
         {
-            String connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" +
-                        "Data Source=" + Server.MapPath("Database.accdb") + ";";
+            // ADDING A USER FOR TESTING PURPOSES
+            Session["UserID"] = "1";
 
-            using (OleDbConnection con = new OleDbConnection(connectionString))
+            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
             {
                 OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
 
@@ -23,22 +28,20 @@
                 DataView view = dataset.Tables[0].DefaultView;
                 view.Sort = "Game ASC";
                 gameSelect.DataSource = dataset.Tables[0];
-                gameSelect.DataValueField = "ID"; // From the database
-                gameSelect.DataTextField = "Game"; // Visible in UI
+                gameSelect.DataValueField = "ID";
+                gameSelect.DataTextField = "Game";
                 gameSelect.DataBind();
 
                 gameSelect.Items.Insert(0, new ListItem() { Text = "Select a game", Value = "0" });
                 catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
+                catSelect.Enabled = false;
             }
         }
     }
 
     private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
-        String connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" +
-                        "Data Source=" + Server.MapPath("Database.accdb") + ";";
-
-        using (OleDbConnection con = new OleDbConnection(connectionString))
+        using (OleDbConnection con = new OleDbConnection(Global.connectionString))
         {
             DropDownList origin = sender as DropDownList;
             String cmdString = ("SELECT * FROM Categories WHERE Game = '"+origin.SelectedItem.Value+"'");
@@ -50,13 +53,28 @@
             DataView view = dataset.Tables[0].DefaultView;
             view.Sort = "Category ASC";
             catSelect.DataSource = dataset.Tables[0];
-            catSelect.DataValueField = "ID"; // From the database
-            catSelect.DataTextField = "Category"; // Visible in UI
+            catSelect.DataValueField = "ID";
+            catSelect.DataTextField = "Category";
             catSelect.DataBind();
             catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
-
+            catSelect.Enabled = origin.SelectedValue == "0" ? false : true;
         }
     }
+
+    //private void btnSubmit_onClick(object sender, EventArgs e)
+    //{
+    //    Console.WriteLine("test successful");
+    //    using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+    //    {
+    //        Button origin = sender as Button;
+    //        String cmdString = ("INSERT INTO Speedruns (UserID, Time, Category)");
+    //        OleDbCommand cmd = new OleDbCommand(cmdString);
+    //        cmd.Parameters.AddWithValue("UserID", Session["UserID"]);
+    //        cmd.Parameters.AddWithValue("Time", Session["saveTime"]);
+    //        cmd.Parameters.AddWithValue("Category", catSelect.SelectedValue);
+    //        cmd.ExecuteNonQuery();
+    //    }
+    //}
 
 </script>
 
@@ -75,11 +93,14 @@
             </div>
             <div>
                 <a>Please select the game you have been playing.</a>
-                <asp:DropDownList AutoPostBack="true" ID="gameSelect" runat="server" onchange="dropDownEnabled()" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
+                <asp:DropDownList AutoPostBack="true" ID="gameSelect" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
             </div>
             <div>
                 <a>Now, select the category you have been playing.</a>
-                <asp:DropDownList AutoPostBack="true" ID="catSelect" runat="server"></asp:DropDownList>
+                <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
+            </div>
+            <div>
+                <a>Submit (eventually)</a>
             </div>
         </form>
     </body>
@@ -119,11 +140,5 @@
             }
         }
         document.getElementById("timeToSave").innerHTML = finalTime;
-    }
-
-    function dropDownEnabled() {
-        var option = gameSelect.options[gameSelect.selectedIndex].value;
-        var catSelect = document.getElementById("catSelect");
-        catSelect.disabled = option == 0 ? true : false;
     }
 </script>
