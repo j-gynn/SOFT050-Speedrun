@@ -4,30 +4,32 @@
 
 <script runat="server">
 
-    //public class GamesDatabase 
-
 
     public static class Global
     {
         public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+        public static bool firstRun = true;
+        public static DataSet catDataSet = new DataSet();
+        public static DataSet gamesDataSet = new DataSet();
     }
+
 
     private void Page_Load() {
         if (!IsPostBack)
         {
             // ADDING A USER FOR TESTING PURPOSES
-            Session["UserID"] = "1";
+            Session["UserID"] = 1;
+            Session["saveTime"] = 3661001;
 
             using (OleDbConnection con = new OleDbConnection(Global.connectionString))
             {
                 OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
 
-                DataSet dataset = new DataSet();
-                da.Fill(dataset);
+                da.Fill(Global.gamesDataSet);
 
-                DataView view = dataset.Tables[0].DefaultView;
+                DataView view = Global.gamesDataSet.Tables[0].DefaultView;
                 view.Sort = "Game ASC";
-                gameSelect.DataSource = dataset.Tables[0];
+                gameSelect.DataSource = Global.gamesDataSet.Tables[0];
                 gameSelect.DataValueField = "ID";
                 gameSelect.DataTextField = "Game";
                 gameSelect.DataBind();
@@ -41,40 +43,49 @@
 
     private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
-        using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+        DropDownList origin = sender as DropDownList;
+        if (Global.firstRun == true)
         {
-            DropDownList origin = sender as DropDownList;
-            String cmdString = ("SELECT * FROM Categories WHERE Game = '"+origin.SelectedItem.Value+"'");
-            OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
-
-            DataSet dataset = new DataSet();
-            da.Fill(dataset);
-
-            DataView view = dataset.Tables[0].DefaultView;
-            view.Sort = "Category ASC";
-            catSelect.DataSource = dataset.Tables[0];
-            catSelect.DataValueField = "ID";
-            catSelect.DataTextField = "Category";
-            catSelect.DataBind();
-            catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
-            catSelect.Enabled = origin.SelectedValue == "0" ? false : true;
+            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+            {
+                String cmdString = ("SELECT * FROM Categories");
+                OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
+                da.Fill(Global.catDataSet);
+                Global.firstRun = false;
+            }
         }
+        DataView view = Global.catDataSet.Tables[0].DefaultView;
+        view.Sort = "Category ASC";
+        view.RowFilter = "Game = '" + origin.SelectedItem.Value + "'";
+        catSelect.DataSource = Global.catDataSet.Tables[0];
+        catSelect.DataValueField = "ID";
+        catSelect.DataTextField = "Category";
+        catSelect.DataBind();
+        catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
+        catSelect.Enabled = origin.SelectedValue != "0" ? true : false;
     }
 
-    //private void btnSubmit_onClick(object sender, EventArgs e)
-    //{
-    //    Console.WriteLine("test successful");
-    //    using (OleDbConnection con = new OleDbConnection(Global.connectionString))
-    //    {
-    //        Button origin = sender as Button;
-    //        String cmdString = ("INSERT INTO Speedruns (UserID, Time, Category)");
-    //        OleDbCommand cmd = new OleDbCommand(cmdString);
-    //        cmd.Parameters.AddWithValue("UserID", Session["UserID"]);
-    //        cmd.Parameters.AddWithValue("Time", Session["saveTime"]);
-    //        cmd.Parameters.AddWithValue("Category", catSelect.SelectedValue);
-    //        cmd.ExecuteNonQuery();
-    //    }
-    //}
+    // For some reason the below code manages to destroy everything else. I have no idea why.
+
+    private void btnSubmit_onClick(object sender, EventArgs e)
+    {
+        Console.WriteLine("test successful");
+        using (OleDbConnection connection = new OleDbConnection(Global.connectionString))
+        using (OleDbCommand cmd = new OleDbCommand("INSERT INTO Speedruns ([UserID],[Time],[Category]) " + "VALUES (?, ?, ?)", connection))
+        {
+            Button origin = sender as Button;
+            cmd.Parameters.Add("@UserID", OleDbType.Integer).Value = 
+                Convert.ToInt32(Session["UserID"]);
+            cmd.Parameters.Add("@Time", OleDbType.Integer).Value = 
+                Convert.ToInt32(Session["saveTime"]);
+            cmd.Parameters.Add("@Category", OleDbType.Integer).Value = 
+                Convert.ToInt32(catSelect.SelectedItem.Value);
+
+            connection.Open();
+            
+            cmd.ExecuteNonQuery();
+        }
+    }
 
 </script>
 
@@ -100,7 +111,7 @@
                 <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
             </div>
             <div>
-                <a>Submit (eventually)</a>
+                <asp:Button ID="send" runat="server" OnClick="btnSubmit_onClick" Text="Submit" />
             </div>
         </form>
     </body>
@@ -117,8 +128,9 @@
         if (sessionStorage.getItem("saveTime") != undefined) {
             var difference = sessionStorage.getItem("saveTime");
         } else {
-            var difference = 3661001; // FOR TESTING - One hour, one minute, one second and one millisecond (in milliseconds)
+            var difference = 3661001;
         }
+       
 
         var timing = {
             hours: Math.floor(difference / (1000 * 60 * 60) % 24),
