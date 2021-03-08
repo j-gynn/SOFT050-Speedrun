@@ -20,8 +20,9 @@
         r = cmd.ExecuteReader();
         if (r.Read())
         {
+            parData.InnerHtml = r["ID"].ToString();
             parData.InnerHtml = "Login Successful!";
-            Session["UserID"] = r["ID"];
+            Session["UserID"] = r["ID"].ToString();
             FormsAuthentication.RedirectFromLoginPage(username, false);
 
         }

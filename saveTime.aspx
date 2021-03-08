@@ -15,12 +15,20 @@
 
 
     private void Page_Load() {
+        if (!this.Page.User.Identity.IsAuthenticated)
+        {
+            FormsAuthentication.RedirectToLoginPage();
+        }
+
+        if (Session["saveTime"] == null)
+        {
+            //Session["UserID"] = "1";
+            //Session["saveTime"] = "3661001";
+            Response.Redirect("/home.aspx");
+        }
+
         if (!IsPostBack)
         {
-            // ADDING A USER FOR TESTING PURPOSES
-            Session["UserID"] = 1;
-            Session["saveTime"] = 3661001;
-
             using (OleDbConnection con = new OleDbConnection(Global.connectionString))
             {
                 OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
@@ -65,25 +73,33 @@
         catSelect.Enabled = origin.SelectedValue != "0" ? true : false;
     }
 
-    // For some reason the below code manages to destroy everything else. I have no idea why.
-
     private void btnSubmit_onClick(object sender, EventArgs e)
     {
-        Console.WriteLine("test successful");
+        string getTime = Session["saveTime"].ToString();
+        int saveTime = Convert.ToInt32(getTime);
         using (OleDbConnection connection = new OleDbConnection(Global.connectionString))
         using (OleDbCommand cmd = new OleDbCommand("INSERT INTO Speedruns ([UserID],[Time],[Category]) " + "VALUES (?, ?, ?)", connection))
         {
             Button origin = sender as Button;
-            cmd.Parameters.Add("@UserID", OleDbType.Integer).Value = 
-                Convert.ToInt32(Session["UserID"]);
-            cmd.Parameters.Add("@Time", OleDbType.Integer).Value = 
-                Convert.ToInt32(Session["saveTime"]);
-            cmd.Parameters.Add("@Category", OleDbType.Integer).Value = 
+            cmd.Parameters.Add("@UserID", OleDbType.BigInt).Value =
+                Convert.ToInt32 (Session["UserID"]);
+            cmd.Parameters.Add("@Time", OleDbType.BigInt).Value =
+                saveTime;
+            cmd.Parameters.Add("@Category", OleDbType.BigInt).Value =
                 Convert.ToInt32(catSelect.SelectedItem.Value);
 
             connection.Open();
-            
-            cmd.ExecuteNonQuery();
+
+            try
+            {
+                cmd.ExecuteNonQuery();
+                complete.InnerHtml = "Success! Your time has been added. Please note, it may take some time for your submission to appear on the leaderboard.";
+                // Response.Redirect("/home.aspx");
+            }
+            catch
+            {
+                complete.InnerHtml = "Something went wrong.";
+            }
         }
     }
 
@@ -112,6 +128,9 @@
             </div>
             <div>
                 <asp:Button ID="send" runat="server" OnClick="btnSubmit_onClick" Text="Submit" />
+            </div>
+            <div>
+                <a id="complete" runat="server"></a>
             </div>
         </form>
     </body>
