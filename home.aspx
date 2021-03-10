@@ -1,4 +1,32 @@
 ﻿<%@ Page Language="C#" %>
+<script runat="server">
+    //Commented out to avoid having to authenticate* every time* I test something new
+    protected string difference = "";
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        this.difference = Request.Form["saveTime"];
+
+        if (!Page.User.Identity.IsAuthenticated)
+        {
+            FormsAuthentication.RedirectToLoginPage();
+        }
+
+        if (Session["Message"] != null)
+        {
+            message.InnerText = Session["Message"].ToString();
+        }
+    }
+
+    private void btnSave_onClick(object sender, EventArgs e)
+    {
+        String timeToSave = this.difference;
+        Session["saveTime"] = timeToSave;
+        Response.Redirect("/saveTime.aspx");
+    }
+
+</script>
+
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -8,21 +36,25 @@
 <body onload="window_onLoad()">
     <div>
         <h1>Speedrunning</h1>
-        <p id="test"></p>
-        <p>
-            <a id="hours">00</a>
-            <a>:</a>
-            <a id="minutes">00</a>
-            <a>:</a>
-            <a id="seconds">00</a>
-            <a>.</a>
-            <a id="milliseconds">000</a>
-        </p>
-        <button id="btnStart" onclick="btnStart_onClick()" type="button">Start timer</button> 
-        <button id="btnStop" onclick="btnStop_onClick()" type="button" disabled>Stop timer</button>
-        <a></a>
-        <button id="btnReset" onclick="btnReset_onClick()" type="button" disabled>Reset</button>
-        <button id="btnSave" onclick="btnSave_onClick()" type="button" disabled>Save</button>
+        <p id="message" runat="server"></p>
+        <form runat="server">
+            <p id="test" runat="server"></p>
+            <p>
+                <a id="hours">00</a>
+                <a>:</a>
+                <a id="minutes">00</a>
+                <a>:</a>
+                <a id="seconds">00</a>
+                <a>.</a>
+                <a id="milliseconds">000</a>
+            </p>
+            <button id="btnStart" onclick="btnStart_onClick()" type="button">Start timer</button> 
+            <button id="btnStop" onclick="btnStop_onClick()" type="button" disabled>Stop timer</button>
+            <a></a>
+            <button id="btnReset" onclick="btnReset_onClick()" type="button" disabled>Reset</button>
+            <asp:button id="btnSave" onclick="btnSave_onClick" runat="server" disabled="true" Text="Save"></asp:button>
+            <input type="hidden" id="saveTime" name="saveTime" value="<%=this.difference %>" />
+        </form>
     </div>
 </body>
 </html>
@@ -30,7 +62,7 @@
 <script>
     var difference;
     var len_req = [-3, -2, -2, -2]; //Used for calculating decimal places of time display
-    var refresh = 10; // How often the timer refreshes
+    var refresh = 1; // How often the timer refreshes
     var running = false;
     var timeNow;
     var timeStart;
@@ -62,6 +94,8 @@
         document.getElementById("btnReset").disabled = false;
         document.getElementById("btnSave").disabled = false;
         running = false;
+        sessionStorage.setItem("saveTime", difference);
+        document.getElementById("saveTime").value = difference;
     }
 
     function btnReset_onClick() {
@@ -70,10 +104,6 @@
         document.getElementById("btnSave").disabled = true;
         difference = 0;
         calculateTimes();
-    }
-
-    function btnSave_onClick() {
-        document.getElementById("test").innerText = "Wanna save dis for the future, y'know?";
     }
 
     function stopwatch() {
@@ -92,10 +122,6 @@
             seconds: Math.floor((difference / 1000) % 60),
             milliseconds: Math.floor(difference % 1000)
         }
-        displayTimes();
-    }
-
-    function displayTimes() {
         var i;
         for (i = 0; i < 4; i++) {
             res = zeros.concat(timing[units[i]]);

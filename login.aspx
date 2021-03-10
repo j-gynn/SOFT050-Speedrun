@@ -20,11 +20,13 @@
         r = cmd.ExecuteReader();
         if (r.Read())
         {
+            parData.InnerHtml = r["ID"].ToString();
             parData.InnerHtml = "Login Successful!";
-            Session["UserID"] = r["ID"];
-            Response.Redirect("~/home.aspx");
+            Session["UserID"] = r["ID"].ToString();
+            FormsAuthentication.RedirectFromLoginPage(username, false);
 
-        } else
+        }
+        else
         {
             parData.InnerHtml = "Username or password not recognised.";
         }
@@ -33,29 +35,43 @@
 </script>
 
 <html>
+    <head>
+        <title>Log In</title>
+        <style type="text/css">
+        .hide {
+            display: none;
+        }
+    
+        .notAvailable:hover + .hide {
+            display: block;
+            color: red;
+        }
+        </style>
+    </head>
     <body>
         <form id="login" runat="server">
             <label><b>Username</b></label>
-            <asp:TextBox ID="username" placeholder="Username" runat="server" TextMode="SingleLine" required="true"></asp:TextBox>
+            <asp:TextBox ID="username" placeholder="Username" required="true" runat="server" TextMode="SingleLine"></asp:TextBox>
 
             <label><b>Password</b></label>
             <asp:TextBox ID="password" placeholder="Password" required="true" runat="server" TextMode="Password"></asp:TextBox>
 
             <asp:Button ID="Button1" runat="server" BorderStyle="None" Font-Size="X-Large" OnClick="btnLogin_onClick" Text="Log In" />
+            <br />
             <label>
-                <%--<input type="checkbox" checked="checked" name="rememberMe" /> Remember me--%>
+                <input class="notAvailable" type="checkbox" checked="checked" name="rememberMe" /> Remember me
+                <a class="hide">Note: This feature is not available in the current build.</a>
             </label>
         </form>
         <a id="parData" runat="server"></a>
 
         <div>
-            <span>Not a member? <a href="signup.aspx">Sign up now.</a></span>
+            <div>Not a member? <a href="#" class="notAvailable">Sign up now.</a><a class="hide">Note: This feature is not available in the current build.</a></div>
         </div>
 
         <div class="container" style="background-color:#f1f1f1">
-            <button type="button" class="btnCancel">Cancel</button>
-            <span class="forgotPwd">Forgot <a href="#">password?</a></span>
+            <button type="button" id="btnCancel" disabled>Cancel</button>
+            <span class="forgotPwd">Forgot <a href="#" class="notAvailable">password?</a> <a class="hide">Note: This feature is not available in the current build.</a></span>
         </div>
     </body>
 </html>
-
