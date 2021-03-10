@@ -11,12 +11,16 @@
         {
             FormsAuthentication.RedirectToLoginPage();
         }
+
+        if (Session["Message"] != null)
+        {
+            message.InnerText = Session["Message"].ToString();
+        }
     }
 
     private void btnSave_onClick(object sender, EventArgs e)
     {
         String timeToSave = this.difference;
-        test.InnerText = timeToSave;
         Session["saveTime"] = timeToSave;
         Response.Redirect("/saveTime.aspx");
     }
@@ -32,6 +36,7 @@
 <body onload="window_onLoad()">
     <div>
         <h1>Speedrunning</h1>
+        <p id="message" runat="server"></p>
         <form runat="server">
             <p id="test" runat="server"></p>
             <p>

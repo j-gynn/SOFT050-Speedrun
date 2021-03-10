@@ -3,7 +3,7 @@
 <%@ Import Namespace="System.Data.OleDb" %>
 
 <script runat="server">
-
+    protected string uiTime = "";
 
     public static class Global
     {
@@ -15,6 +15,7 @@
 
 
     private void Page_Load() {
+        
         if (!this.Page.User.Identity.IsAuthenticated)
         {
             FormsAuthentication.RedirectToLoginPage();
@@ -22,12 +23,10 @@
 
         if (Session["saveTime"] == null)
         {
-            //Session["UserID"] = "1";
-            //Session["saveTime"] = "3661001";
             Response.Redirect("/home.aspx");
         }
 
-        if (!IsPostBack)
+        else if (!IsPostBack)
         {
             using (OleDbConnection con = new OleDbConnection(Global.connectionString))
             {
@@ -54,6 +53,7 @@
         DropDownList origin = sender as DropDownList;
         if (Global.firstRun == true)
         {
+            
             using (OleDbConnection con = new OleDbConnection(Global.connectionString))
             {
                 String cmdString = ("SELECT * FROM Categories");
@@ -75,16 +75,19 @@
 
     private void btnSubmit_onClick(object sender, EventArgs e)
     {
+        this.uiTime = Request.Form["databaseTime"].ToString();
         string getTime = Session["saveTime"].ToString();
         int saveTime = Convert.ToInt32(getTime);
         using (OleDbConnection connection = new OleDbConnection(Global.connectionString))
-        using (OleDbCommand cmd = new OleDbCommand("INSERT INTO Speedruns ([UserID],[Time],[Category]) " + "VALUES (?, ?, ?)", connection))
+        using (OleDbCommand cmd = new OleDbCommand("INSERT INTO Speedruns ([UserID],[Time],[TimeUI],[Category]) " + "VALUES (?, ?, ?, ?)", connection))
         {
             Button origin = sender as Button;
             cmd.Parameters.Add("@UserID", OleDbType.BigInt).Value =
                 Convert.ToInt32 (Session["UserID"]);
             cmd.Parameters.Add("@Time", OleDbType.BigInt).Value =
                 saveTime;
+            cmd.Parameters.Add("@TimeUI", OleDbType.Char).Value =
+                this.uiTime;
             cmd.Parameters.Add("@Category", OleDbType.BigInt).Value =
                 Convert.ToInt32(catSelect.SelectedItem.Value);
 
@@ -93,8 +96,8 @@
             try
             {
                 cmd.ExecuteNonQuery();
-                complete.InnerHtml = "Success! Your time has been added. Please note, it may take some time for your submission to appear on the leaderboard.";
-                // Response.Redirect("/home.aspx");
+                Session["Message"] = "Success! Your time has been added. Please note, it may take some time for your submission to appear on the leaderboard.";
+                Response.Redirect("/home.aspx");
             }
             catch
             {
@@ -108,15 +111,15 @@
 <DOCTYPE HTML>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head runat="server">
-        <title></title>
+        <title>Save your time</title>
     </head>
     <body onload="calculateTimes()">
         <form id="saveTime" runat="server">
             <div>
                 <a id="test" runat="server"></a>
                 <a>The time you wish to save is: </a>
-                <a id="timeToSave">
-                </a>
+                <a id="timeToSave"></a>
+                <input type="hidden" id="database_Time" name="databaseTime" value="<%=this.uiTime %>" />
             </div>
             <div>
                 <a>Please select the game you have been playing.</a>
@@ -140,6 +143,7 @@
     var units = ["hours", "minutes", "seconds", "milliseconds"];
     var zeros = "0000";
     var finalTime = "";
+    var database_Time;
 
 
     function calculateTimes() {
@@ -171,5 +175,6 @@
             }
         }
         document.getElementById("timeToSave").innerHTML = finalTime;
+        document.getElementById("database_Time").value = finalTime;
     }
 </script>
