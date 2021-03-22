@@ -63,8 +63,6 @@
             //dataGridView.DataSource = adminBindSrc;
             //displayGridView.DataSource = dataTable;
             //displayGridView.DataBind();
-            leaderboard.DataSource = dataTable;
-            leaderboard.DataBind();
         }
     }
 
@@ -83,16 +81,6 @@
     <form id="form1" runat="server">
         hello
         <div>
-            <asp:DataGrid runat="server" ID="leaderboard" AutoGenerateColumns="false">
-                <Columns>
-                    <asp:BoundColumn DataField="Username"
-                        HeaderText="Username"></asp:BoundColumn>
-                    <asp:BoundColumn 
-                        DataField="TimeUI"
-                        HeaderText="Time"></asp:BoundColumn>
-                </Columns>
-            </asp:DataGrid>
-            
 
             <asp:GridView ID="displayGridView" runat="server" AutoGenerateColumns="False" DataKeyNames="UserID" DataSourceID="SqlDataSource1" >
                 <Columns>
