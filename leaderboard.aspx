@@ -5,36 +5,52 @@
 <!DOCTYPE html>
 
 <script runat="server">
-    public static class Global
-    {
-        public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
-        public static bool firstRunCat = true;
-        public static bool firstRunGame = true;
-        public static DataTable catDataSet = new DataTable();
-        public static DataTable gamesDataSet = new DataTable();
-        public static DataTable speedruns = new DataTable();
-    }
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    public static bool firstRunCat = true;
+    public static bool firstRunGame = true;
+    public static DataTable catDataSet = new DataTable();
+    public static DataTable gamesDataSet = new DataTable();
+    public static DataTable speedruns = new DataTable();
+
 
     private void Page_Load() {
-        //if (!this.Page.User.Identity.IsAuthenticated)
-        //{
-        //    FormsAuthentication.RedirectToLoginPage();
-        //}
-        //else
+
+        if (this.Page.User.Identity.IsAuthenticated)
+        {
+            loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
+            btnLogin.Visible = false;
+            if (Session["isAdmin"].ToString() == "True")
+            {
+                isAdmin.Visible = true;
+                isAdmin.InnerText = "Admin";
+                isAdmin.HRef = "admin.aspx";
+            } else
+            {
+                isAdmin.Visible = false;
+            }
+        }
+        else
+        {
+            loggedIn.InnerHtml = "You are not currently logged in. <a id='btnLogin' href='login.aspx?ReturnUrl=%2fleaderboard.aspx' runat='server'>Log in now.</a>";
+            btnLogin.Visible = true;
+
+        }
+
 
         if (!IsPostBack)
         {
-            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+            using (OleDbConnection con = new OleDbConnection(connectionString))
             {
                 OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
 
+                gamesDataSet.Clear();
                 gameSelect.Items.Clear();
 
-                da.Fill(Global.gamesDataSet);
+                da.Fill(gamesDataSet);
 
-                DataView view = Global.gamesDataSet.DefaultView;
+                DataView view = gamesDataSet.DefaultView;
                 view.Sort = "Game ASC";
-                gameSelect.DataSource = Global.gamesDataSet;
+                gameSelect.DataSource = gamesDataSet;
                 gameSelect.DataValueField = "ID";
                 gameSelect.DataTextField = "Game";
                 gameSelect.DataBind();
@@ -49,20 +65,22 @@
     private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
         DropDownList origin = sender as DropDownList;
-        if (Global.firstRunGame == true)
+        using (OleDbConnection con = new OleDbConnection(connectionString))
         {
-            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
-            {
-                String cmdString = ("SELECT * FROM Categories");
-                OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
-                da.Fill(Global.catDataSet);
-                Global.firstRunGame = false;
-            }
+            String cmdString = ("SELECT * FROM Categories");
+            OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
+            catDataSet.Clear();
+            da.Fill(catDataSet);
+            firstRunGame = false;
         }
-        DataView view = Global.catDataSet.DefaultView;
+
+        leaderboard.Visible = false;
+        no_data.InnerText = "";
+        DataView view = catDataSet.DefaultView;
+
         view.Sort = "Category ASC";
         view.RowFilter = "Game = '" + origin.SelectedItem.Value + "'";
-        catSelect.DataSource = Global.catDataSet;
+        catSelect.DataSource = catDataSet;
         catSelect.DataValueField = "ID";
         catSelect.DataTextField = "Category";
         catSelect.DataBind();
@@ -73,22 +91,37 @@
     private void catSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
         DropDownList origin = sender as DropDownList;
-        if (Global.firstRunCat == true)
+        using (OleDbConnection con = new OleDbConnection(connectionString))
         {
-            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
-            {
-                String cmdString = ("SELECT Speedruns.UserID, Speedruns.Time, Speedruns.TimeUI, Speedruns.Category, Speedruns.isVerified, Users.ID, Users.Username " +
-                    "FROM Users INNER JOIN Speedruns ON Users.[ID] = Speedruns.[UserID];");
-                OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
-                da.Fill(Global.speedruns);
-                Global.firstRunCat = false;
-            }
+            speedruns.Clear();
+            String cmdString = ("SELECT Speedruns.UserID, Speedruns.Time, Speedruns.TimeUI, Speedruns.Category, Speedruns.isVerified, Users.ID, Users.Username " +
+                "FROM Users INNER JOIN Speedruns ON Users.[ID] = Speedruns.[UserID] " +
+                "WHERE Category = ? " +
+                //"AND isVerified = True " +
+                //commented out until admin.aspx working
+                "ORDER BY Speedruns.Time;");
+            OleDbCommand command = new OleDbCommand(cmdString, con);
+            command.Parameters.Add(
+                "@Category", OleDbType.VarChar).Value = origin.SelectedItem.Value;
+            OleDbDataAdapter da = new OleDbDataAdapter();
+            da.SelectCommand = command;
+
+            da.Fill(speedruns);
+
         }
-        DataView view = Global.speedruns.DefaultView;
-        view.Sort = "Time ASC";
-        view.RowFilter = "Category = '" + origin.SelectedItem.Value + "'";
-        leaderboard.DataSource = Global.speedruns;
+
+        leaderboard.Visible = true;
+        leaderboard.DataSource = speedruns;
         leaderboard.DataBind();
+        if (speedruns.Rows.Count == 0)
+        {
+            leaderboard.Visible = false;
+            no_data.InnerText = "There is no data available for this leaderboard at this time.";
+        } else
+        {
+            leaderboard.Visible = true;
+            no_data.InnerText = "";
+        }
     }
 </script>
 
@@ -97,25 +130,31 @@
     <title>Leaderboards</title>
 </head>
 <body>
+    <nav>
+        <a href="home.aspx">Home</a>
+        <a id="isAdmin" runat="server"></a>
+        <p id="loggedIn" runat="server">
+        <a id="btnLogin" href="login.aspx?ReturnUrl=%2fleaderboard.aspx" runat="server">Log in now.</a>
+        </p>
+    </nav>
     <form id="form1" runat="server">
         <div>
-            <div>
-                <h1>Leaderboards</h1>
-                <a>Select a category to view leaderboards.</a>
-                <br />
-                <asp:DropDownList AutoPostBack="true" ID="gameSelect" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
-                <asp:DropDownList AutoPostBack="true" ID="catSelect" runat="server" OnSelectedIndexChanged="catSelect_SelectedIndexChanged"></asp:DropDownList>
-
-                <p>Here's where the leaderboard will eventually be :)</p>
-                <asp:DataGrid runat="server" ID="leaderboard" AutoGenerateColumns="false">
-                    <Columns>
-                        <asp:BoundColumn DataField="Username"
-                            HeaderText="Username"></asp:BoundColumn>
-                        <asp:BoundColumn DataField="TimeUI"
-                            HeaderText="Time"></asp:BoundColumn>
-                    </Columns>
-                </asp:DataGrid>
-            </div>
+            <h1>Leaderboards</h1>
+            <a>Select a category to view leaderboards.</a>
+            <br />
+            <asp:DropDownList AutoPostBack="true" ID="gameSelect" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
+            <asp:DropDownList AutoPostBack="true" ID="catSelect" runat="server" OnSelectedIndexChanged="catSelect_SelectedIndexChanged"></asp:DropDownList>
+            <p></p>
+            <asp:DataGrid runat="server" ID="leaderboard" AutoGenerateColumns="false">
+                <Columns>
+                    <asp:BoundColumn DataField="Username"
+                        HeaderText="Username"></asp:BoundColumn>
+                    <asp:BoundColumn 
+                        DataField="TimeUI"
+                        HeaderText="Time"></asp:BoundColumn>
+                </Columns>
+            </asp:DataGrid>
+            <p id="no_data" runat="server"></p>
         </div>
     </form>
 </body>

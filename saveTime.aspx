@@ -101,7 +101,7 @@
             }
             catch
             {
-                complete.InnerHtml = "Something went wrong.";
+                complete.InnerHtml = "Something went wrong. Please try again later.";
             }
         }
     }
@@ -114,9 +114,15 @@
         <title>Save your time</title>
     </head>
     <body onload="calculateTimes()">
+            <nav>
+                <a href="home.aspx">Home</a>
+                <a href="leaderboard.aspx">Leaderboard</a>
+                <a href="admin.aspx">Admin</a>
+            </nav>
         <form id="saveTime" runat="server">
             <div>
-                <a id="test" runat="server"></a>
+                <h1>Save your time</h1>
+                <a></a>
                 <a>The time you wish to save is: </a>
                 <a id="timeToSave"></a>
                 <input type="hidden" id="database_Time" name="databaseTime" value="<%=this.uiTime %>" />

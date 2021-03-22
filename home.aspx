@@ -6,15 +6,23 @@
     protected void Page_Load(object sender, EventArgs e)
     {
         this.difference = Request.Form["saveTime"];
+        loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
 
-        if (!Page.User.Identity.IsAuthenticated)
+        if (this.Page.User.Identity.IsAuthenticated)
         {
-            FormsAuthentication.RedirectToLoginPage();
-        }
-
-        if (Session["Message"] != null)
+            loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
+            if (Session["isAdmin"].ToString() == "True")
+            {
+                isAdmin.Visible = true;
+                isAdmin.InnerText = "Admin";
+                isAdmin.HRef = "admin.aspx";
+            } else
+            {
+                isAdmin.Visible = false;
+            }
+        } else
         {
-            message.InnerText = Session["Message"].ToString();
+            Response.Redirect("login.aspx");
         }
     }
 
@@ -34,6 +42,11 @@
     <title>Speedrun Timer</title>
 </head>
 <body onload="window_onLoad()">
+    <nav>
+        <a href="leaderboard.aspx">Leaderboards</a>
+        <a id="isAdmin" runat="server"></a>
+        <p id="loggedIn" runat="server"></p>
+    </nav>
     <div>
         <h1>Speedrunning</h1>
         <p id="message" runat="server"></p>
