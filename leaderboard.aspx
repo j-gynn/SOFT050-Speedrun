@@ -97,7 +97,7 @@
             String cmdString = ("SELECT Speedruns.UserID, Speedruns.Time, Speedruns.TimeUI, Speedruns.Category, Speedruns.isVerified, Users.ID, Users.Username " +
                 "FROM Users INNER JOIN Speedruns ON Users.[ID] = Speedruns.[UserID] " +
                 "WHERE Category = ? " +
-                //"AND isVerified = True " +
+                "AND isVerified = True " +
                 //commented out until admin.aspx working
                 "ORDER BY Speedruns.Time;");
             OleDbCommand command = new OleDbCommand(cmdString, con);
