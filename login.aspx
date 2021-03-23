@@ -22,7 +22,8 @@
         {
             parData.InnerHtml = r["ID"].ToString();
             parData.InnerHtml = "Login Successful!";
-            Session["UserID"] = r["ID"].ToString();
+            Session["isAdmin"] = r["isAdmin"].ToString();
+            //should be exactly "True" if user is an admin
             FormsAuthentication.RedirectFromLoginPage(username, false);
 
         }
