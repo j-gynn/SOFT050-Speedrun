@@ -120,6 +120,7 @@
                 <input type="hidden" id="saveTime" name="saveTime" value="<%=this.difference %>" />
             </div>
             <div style="background-color:lightgrey">
+                <h3>Advanced</h3>
                 <p>Select a category to view target times</p>
                 <asp:DropDownList ID="gameSelect" autopostback="true" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
                 <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
