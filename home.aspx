@@ -124,6 +124,26 @@
                 <p>Select a category to view target times</p>
                 <asp:DropDownList ID="gameSelect" autopostback="true" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
                 <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
+                <table>
+                <tbody>
+                    <tr>
+                        <td><img src="/diamond-trophy.png" /></td>
+                        <td runat="server" id="diamondTime">Lorem ipsum dolor sit amet</td>
+                    </tr>
+                    <tr>
+                        <td><img src="/gold-trophy.png" /></td>
+                        <td id="goldTime"></td>
+                    </tr>
+                    <tr>
+                        <td><img src="/silver-trophy.png" /></td>
+                        <td id="silverTime"></td>
+                    </tr>
+                    <tr>
+                        <td><img src="/bronze-trophy.png" /></td>
+                        <td id="bronzeTime"></td>
+                    </tr>
+                </tbody>
+                </table>  
             </div>
         </form>
     </div>
@@ -157,6 +177,8 @@
         timeStart = new Date().getTime();
         document.getElementById("btnStop").disabled = false;
         document.getElementById("btnStart").disabled = true;
+        document.getElementById("gameSelect").disabled = true;
+        document.getElementById("catSelect").disabled = true;
         running = true;
     }
 
@@ -173,6 +195,8 @@
         document.getElementById("btnStart").disabled = false;
         document.getElementById("btnReset").disabled = true;
         document.getElementById("btnSave").disabled = true;
+        document.getElementById("gameSelect").disabled = false;
+        document.getElementById("catSelect").disabled = false;
         difference = 0;
         calculateTimes();
     }
