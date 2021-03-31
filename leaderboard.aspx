@@ -94,11 +94,9 @@
         using (OleDbConnection con = new OleDbConnection(connectionString))
         {
             speedruns.Clear();
-            String cmdString = ("SELECT Speedruns.UserID, Speedruns.Time, Speedruns.TimeUI, Speedruns.Category, Speedruns.isVerified, Users.ID, Users.Username " +
+            String cmdString = ("SELECT TOP 10 Speedruns.UserID, Speedruns.Time, Speedruns.TimeUI, Speedruns.Category, Speedruns.isVerified, Users.ID, Users.Username " +
                 "FROM Users INNER JOIN Speedruns ON Users.[ID] = Speedruns.[UserID] " +
-                "WHERE Category = ? " +
-                "AND isVerified = True " +
-                //commented out until admin.aspx working
+                "WHERE Category = ? AND isVerified = True " +
                 "ORDER BY Speedruns.Time;");
             OleDbCommand command = new OleDbCommand(cmdString, con);
             command.Parameters.Add(

@@ -1,7 +1,13 @@
-﻿<%@ Page Language="C#" %>
+﻿ <%@ Page Language="C#" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Import Namespace="System.Data.OleDb" %>
+
 <script runat="server">
-    //Commented out to avoid having to authenticate* every time* I test something new
     protected string difference = "";
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    public static bool firstRun = true;
+    public static DataSet catDataSet = new DataSet();
+    public static DataSet gamesDataSet = new DataSet();
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -10,19 +16,62 @@
 
         if (this.Page.User.Identity.IsAuthenticated)
         {
-            loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
-            if (Session["isAdmin"].ToString() == "True")
-            {
-                isAdmin.Visible = true;
-                isAdmin.InnerText = "Admin";
-                isAdmin.HRef = "admin.aspx";
-            } else
-            {
-                isAdmin.Visible = false;
-            }
+            //Commented out to avoid having to authenticate for every minor change lol
+            //loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
+            //if (Session["isAdmin"].ToString() == "True")
+            //{
+            //    isAdmin.Visible = true;
+            //    isAdmin.InnerText = "Admin";
+            //    isAdmin.HRef = "admin.aspx";
+            //} else
+            //{
+            //    isAdmin.Visible = false;
+            //}
         } else
         {
             Response.Redirect("login.aspx");
+        }
+        if (!IsPostBack)
+        {
+            using (OleDbConnection con = new OleDbConnection(connectionString))
+            {
+                OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
+
+                da.Fill(gamesDataSet);
+
+                DataView view = gamesDataSet.Tables[0].DefaultView;
+                view.Sort = "Game ASC";
+                gameSelect.DataSource = gamesDataSet.Tables[0];
+                gameSelect.DataValueField = "ID";
+                gameSelect.DataTextField = "Game";
+                gameSelect.DataBind();
+
+                gameSelect.Items.Insert(0, new ListItem() { Text = "Select a game", Value = "0" });
+                catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
+                catSelect.Enabled = false;
+            }
+        }
+    }
+
+    private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        DropDownList origin = sender as DropDownList;
+        using (OleDbConnection con = new OleDbConnection(connectionString))
+        {
+            OleDbCommand cmd = new OleDbCommand("SELECT * FROM Categories WHERE Game = ?");
+            cmd.Parameters.Add(
+                "@Game", OleDbType.VarChar).Value = origin.SelectedValue;
+            OleDbDataAdapter da = new OleDbDataAdapter();
+            da.SelectCommand = cmd;
+            da.SelectCommand.Connection = con;
+            da.Fill(catDataSet);
+
+            catSelect.DataSource = catDataSet.Tables[0];
+            catSelect.DataValueField = "ID";
+            catSelect.DataTextField = "Category";
+            catSelect.DataBind();
+            catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
+            catSelect.Enabled = origin.SelectedValue != "0" ? true : false;
         }
     }
 
@@ -40,6 +89,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Speedrun Timer</title>
+    <link rel="stylesheet" type="text/css" href="home.css" />
 </head>
 <body onload="window_onLoad()">
     <nav>
@@ -51,22 +101,29 @@
         <h1>Speedrunning</h1>
         <p id="message" runat="server"></p>
         <form runat="server">
-            <p id="test" runat="server"></p>
-            <p>
-                <a id="hours">00</a>
-                <a>:</a>
-                <a id="minutes">00</a>
-                <a>:</a>
-                <a id="seconds">00</a>
-                <a>.</a>
-                <a id="milliseconds">000</a>
-            </p>
-            <button id="btnStart" onclick="btnStart_onClick()" type="button">Start timer</button> 
-            <button id="btnStop" onclick="btnStop_onClick()" type="button" disabled>Stop timer</button>
-            <a></a>
-            <button id="btnReset" onclick="btnReset_onClick()" type="button" disabled>Reset</button>
-            <asp:button id="btnSave" onclick="btnSave_onClick" runat="server" disabled="true" Text="Save"></asp:button>
-            <input type="hidden" id="saveTime" name="saveTime" value="<%=this.difference %>" />
+            <div>
+                <p id="test" runat="server"></p>
+                <p>
+                    <a id="hours">00</a>
+                    <a>:</a>
+                    <a id="minutes">00</a>
+                    <a>:</a>
+                    <a id="seconds">00</a>
+                    <a>.</a>
+                    <a id="milliseconds">000</a>
+                </p>
+                <button id="btnStart" onclick="btnStart_onClick()" type="button">Start timer</button> 
+                <button id="btnStop" onclick="btnStop_onClick()" type="button" disabled>Stop timer</button>
+                <a></a>
+                <button id="btnReset" onclick="btnReset_onClick()" type="button" disabled>Reset</button>
+                <button id="btnSave" onserverclick="btnSave_onClick" runat="server" disabled>Save</button>
+                <input type="hidden" id="saveTime" name="saveTime" value="<%=this.difference %>" />
+            </div>
+            <div style="background-color:lightgrey">
+                <p>Select a category to view target times</p>
+                <asp:DropDownList ID="gameSelect" autopostback="true" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
+                <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
+            </div>
         </form>
     </div>
 </body>
@@ -137,8 +194,8 @@
         }
         var i;
         for (i = 0; i < 4; i++) {
-            res = zeros.concat(timing[units[i]]);
-            correct = res.slice((i >= 3) ? -3 : -2);
+            var res = zeros.concat(timing[units[i]]);
+            var correct = res.slice((i >= 3) ? -3 : -2);
             document.getElementById(units[i]).innerText = correct;
         }    
     }
