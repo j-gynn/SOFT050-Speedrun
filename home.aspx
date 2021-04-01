@@ -12,37 +12,37 @@
     protected void Page_Load(object sender, EventArgs e)
     {
         this.difference = Request.Form["saveTime"];
-        loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
 
-        if (this.Page.User.Identity.IsAuthenticated)
-        {
-            //Commented out to avoid having to authenticate for every minor change lol
-            loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
-            if (Session["isAdmin"].ToString() == "True")
-            {
-                isAdmin.Visible = true;
-                isAdmin.InnerText = "Admin";
-                isAdmin.HRef = "admin.aspx";
-            }
-            else
-            {
-                isAdmin.Visible = false;
-            }
-        } else
-        {
-            //Commented out to avoid having to authenticate for every minor change lol
-            //Response.Redirect("login.aspx");
-        }
+        //if (this.Page.User.Identity.IsAuthenticated)
+        //{
+        //    //Commented out to avoid having to authenticate for every minor change lol
+
+
+        //    loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
+        //    if (Session["isAdmin"].ToString() == "True")
+        //    {
+        //        isAdmin.Visible = true;
+        //        isAdmin.InnerText = "Admin";
+        //        isAdmin.HRef = "admin.aspx";
+        //    }
+        //    else
+        //    {
+        //        isAdmin.Visible = false;
+        //    }
+        //}
+        //else
+        //{
+        //    //Commented out to avoid having to authenticate for every minor change lol
+        //    Response.Redirect("login.aspx");
+        //}
         if (!IsPostBack)
         {
             using (OleDbConnection con = new OleDbConnection(connectionString))
             {
-                OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
+                OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games ORDER BY Game", con);
 
+                gamesDataSet.Reset();
                 da.Fill(gamesDataSet);
-
-                DataView view = gamesDataSet.Tables[0].DefaultView;
-                view.Sort = "Game ASC";
                 gameSelect.DataSource = gamesDataSet.Tables[0];
                 gameSelect.DataValueField = "ID";
                 gameSelect.DataTextField = "Game";
@@ -58,6 +58,7 @@
     private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
         DropDownList origin = sender as DropDownList;
+        catDataSet.Reset();
         using (OleDbConnection con = new OleDbConnection(connectionString))
         {
             OleDbCommand cmd = new OleDbCommand("SELECT * FROM Categories WHERE Game = ?");
@@ -89,16 +90,18 @@
             cmd.Connection = con;
             con.Open();
             r = cmd.ExecuteReader();
+            bool isEmpty = true;
             while (r.Read())
             {
                 double[] ratios = { 1.1, 1.25, 1.5, 2 };
                 HtmlTableCell[] display = { diamondTime, goldTime, silverTime, bronzeTime };
                 fastestTime = Convert.ToInt32(r["Time"]);
 
-
+                
                 int rank;
                 for (rank = 0; rank < 4; rank ++ )
                 {
+                    isEmpty = false;
                     double msTime = fastestTime * ratios[rank];
                     int displayInt = Convert.ToInt32(Math.Ceiling(msTime));
                     string displayTime = "";
@@ -122,9 +125,16 @@
                         }
                     }
                     display[rank].InnerText = displayTime;
-                }
+                }  
             }
             con.Close();
+            if (isEmpty)
+                {
+                    diamondTime.InnerText = "No times recorded for this category. Be the first!";
+                    goldTime.InnerText = "";
+                    silverTime.InnerText = "";
+                    bronzeTime.InnerText = "";
+                }
         }
     }
 
