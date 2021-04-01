@@ -17,19 +17,21 @@
         if (this.Page.User.Identity.IsAuthenticated)
         {
             //Commented out to avoid having to authenticate for every minor change lol
-            //loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
-            //if (Session["isAdmin"].ToString() == "True")
-            //{
-            //    isAdmin.Visible = true;
-            //    isAdmin.InnerText = "Admin";
-            //    isAdmin.HRef = "admin.aspx";
-            //} else
-            //{
-            //    isAdmin.Visible = false;
-            //}
+            loggedIn.InnerText = "Logged in as: " + User.Identity.Name;
+            if (Session["isAdmin"].ToString() == "True")
+            {
+                isAdmin.Visible = true;
+                isAdmin.InnerText = "Admin";
+                isAdmin.HRef = "admin.aspx";
+            }
+            else
+            {
+                isAdmin.Visible = false;
+            }
         } else
         {
-            Response.Redirect("login.aspx");
+            //Commented out to avoid having to authenticate for every minor change lol
+            //Response.Redirect("login.aspx");
         }
         if (!IsPostBack)
         {
@@ -72,6 +74,57 @@
             catSelect.DataBind();
             catSelect.Items.Insert(0, new ListItem() { Text = "Select a category", Value = "0" });
             catSelect.Enabled = origin.SelectedValue != "0" ? true : false;
+        }
+    }
+
+    private void catSelect_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        DropDownList origin = sender as DropDownList;
+        using (OleDbConnection con = new OleDbConnection(connectionString))
+        {
+            int fastestTime;
+            OleDbCommand cmd = new OleDbCommand("SELECT TOP 1 Speedruns.Time FROM Speedruns WHERE Category = ? AND isVerified = True ORDER BY Speedruns.Time;");
+            OleDbDataReader r;
+            cmd.Parameters.Add("@Category", OleDbType.VarChar).Value = origin.SelectedValue;
+            cmd.Connection = con;
+            con.Open();
+            r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                double[] ratios = { 1.1, 1.25, 1.5, 2 };
+                HtmlTableCell[] display = { diamondTime, goldTime, silverTime, bronzeTime };
+                fastestTime = Convert.ToInt32(r["Time"]);
+
+
+                int rank;
+                for (rank = 0; rank < 4; rank ++ )
+                {
+                    double msTime = fastestTime * ratios[rank];
+                    int displayInt = Convert.ToInt32(Math.Ceiling(msTime));
+                    string displayTime = "";
+
+                    //calculations to figure out the time to display
+                    int hours = displayInt / (1000 * 60 * 60) % 24;
+                    int minutes = displayInt / (1000 * 60) % 60;
+                    int seconds = displayInt / 1000 % 60;
+
+                    //putting those integers into an array that can be called iteratively in a for loop later
+                    int[] times = {hours, minutes, seconds};
+                    string zeros = "00";
+                    int i;
+                    for (i=0; i<3; i++)
+                    {
+                        string res = String.Concat(zeros, (times[i].ToString()));
+                        displayTime = displayTime + res.Substring(res.Length - 2);
+                        if (i != 2)
+                        {
+                            displayTime = displayTime + ":";
+                        }
+                    }
+                    display[rank].InnerText = displayTime;
+                }
+            }
+            con.Close();
         }
     }
 
@@ -123,7 +176,7 @@
                 <h3>Advanced</h3>
                 <p>Select a category to view target times</p>
                 <asp:DropDownList ID="gameSelect" autopostback="true" runat="server" OnSelectedIndexChanged="gameSelect_SelectedIndexChanged"></asp:DropDownList>
-                <asp:DropDownList ID="catSelect" runat="server"></asp:DropDownList>
+                <asp:DropDownList ID="catSelect" AutoPostBack="true" runat="server" OnSelectedIndexChanged="catSelect_SelectedIndexChanged"></asp:DropDownList>
                 <table>
                 <tbody>
                     <tr>
@@ -132,15 +185,15 @@
                     </tr>
                     <tr>
                         <td><img src="/gold-trophy.png" /></td>
-                        <td id="goldTime"></td>
+                        <td id="goldTime" runat="server"></td>
                     </tr>
                     <tr>
                         <td><img src="/silver-trophy.png" /></td>
-                        <td id="silverTime"></td>
+                        <td id="silverTime" runat="server"></td>
                     </tr>
                     <tr>
                         <td><img src="/bronze-trophy.png" /></td>
-                        <td id="bronzeTime"></td>
+                        <td id="bronzeTime" runat="server"></td>
                     </tr>
                 </tbody>
                 </table>  
