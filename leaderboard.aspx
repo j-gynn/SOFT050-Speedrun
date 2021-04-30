@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 
 <script runat="server">
-    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("assets/Database.accdb") + ";";
     public static bool firstRunCat = true;
     public static bool firstRunGame = true;
     public static DataTable catDataSet = new DataTable();

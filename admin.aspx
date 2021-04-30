@@ -10,7 +10,7 @@
 
 <script runat="server">
 
-    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("assets/Database.accdb") + ";";
     public int currentID = 0;
 
     private void Page_Load() {
@@ -70,28 +70,12 @@
 
         public void btnApprove_onClick(object sender, EventArgs e)
         {
-            //String cmdString = "UPDATE Speedruns SET isVerified = True WHERE Speedruns.ID = " + currentID;
-            //using (OleDbConnection con = new OleDbConnection(connectionString))
-            //{
-            //    OleDbCommand command = new OleDbCommand(cmdString, con);
-            //    con.Open();
-            //    command.ExecuteNonQuery();
-            //    con.Close();
-            //}
             updateRecord("isVerified");
             GetData();
         }
 
         public void btnDeny_onClick(object sender, EventArgs e)
         {
-            //String cmdString = "UPDATE Speedruns SET isHidden = True WHERE Speedruns.ID = " + currentID;
-            //using (OleDbConnection con = new OleDbConnection(connectionString))
-            //{
-            //    OleDbCommand command = new OleDbCommand(cmdString, con);
-            //    con.Open();
-            //    command.ExecuteNonQuery();
-            //    con.Close();
-            //}
             updateRecord("isHidden");
             GetData();
         }

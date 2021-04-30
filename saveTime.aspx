@@ -5,7 +5,7 @@
 <script runat="server">
     protected string uiTime = "";
 
-    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("assets/Database.accdb") + ";";
     public static bool firstRun = true;
     public static DataSet catDataSet = new DataSet();
     public static DataSet gamesDataSet = new DataSet();
