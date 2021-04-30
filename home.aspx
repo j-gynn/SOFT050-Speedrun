@@ -522,7 +522,11 @@
         }
 
         if (target == true) {
-            if (timeElapsed < document.getElementById("targetTime")) {
+            if (timeElapsed < (document.getElementById("targetTime").value * 0.5)) {
+                document.getElementById("targetPlusMinus").innerText = "-";
+                document.getElementById("targetComparison").style.color = "goldenRod";
+
+            } else if (timeElapsed < document.getElementById("targetTime").value) {
                 document.getElementById("targetPlusMinus").innerText = "-";
                 document.getElementById("targetComparison").style.color = "green";
             } else {
