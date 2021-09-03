@@ -5,13 +5,11 @@
 <script runat="server">
     protected string uiTime = "";
 
-    public static class Global
-    {
-        public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("Database.accdb") + ";";
-        public static bool firstRun = true;
-        public static DataSet catDataSet = new DataSet();
-        public static DataSet gamesDataSet = new DataSet();
-    }
+    public static string connectionString = "Provider=Microsoft.ACE.OLEDB.12.0;" + "Data Source=" + System.Web.HttpContext.Current.Server.MapPath("assets/Database.accdb") + ";";
+    public static bool firstRun = true;
+    public static DataSet catDataSet = new DataSet();
+    public static DataSet gamesDataSet = new DataSet();
+
 
 
     private void Page_Load() {
@@ -28,15 +26,15 @@
 
         else if (!IsPostBack)
         {
-            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+            using (OleDbConnection con = new OleDbConnection(connectionString))
             {
                 OleDbDataAdapter da = new OleDbDataAdapter("SELECT * FROM Games", con);
 
-                da.Fill(Global.gamesDataSet);
+                da.Fill(gamesDataSet);
 
-                DataView view = Global.gamesDataSet.Tables[0].DefaultView;
+                DataView view = gamesDataSet.Tables[0].DefaultView;
                 view.Sort = "Game ASC";
-                gameSelect.DataSource = Global.gamesDataSet.Tables[0];
+                gameSelect.DataSource = gamesDataSet.Tables[0];
                 gameSelect.DataValueField = "ID";
                 gameSelect.DataTextField = "Game";
                 gameSelect.DataBind();
@@ -51,21 +49,21 @@
     private void gameSelect_SelectedIndexChanged(object sender, EventArgs e)
     {
         DropDownList origin = sender as DropDownList;
-        if (Global.firstRun == true)
+        if (firstRun == true)
         {
             
-            using (OleDbConnection con = new OleDbConnection(Global.connectionString))
+            using (OleDbConnection con = new OleDbConnection(connectionString))
             {
                 String cmdString = ("SELECT * FROM Categories");
                 OleDbDataAdapter da = new OleDbDataAdapter(cmdString, con);
-                da.Fill(Global.catDataSet);
-                Global.firstRun = false;
+                da.Fill(catDataSet);
+                firstRun = false;
             }
         }
-        DataView view = Global.catDataSet.Tables[0].DefaultView;
+        DataView view = catDataSet.Tables[0].DefaultView;
         view.Sort = "Category ASC";
         view.RowFilter = "Game = '" + origin.SelectedItem.Value + "'";
-        catSelect.DataSource = Global.catDataSet.Tables[0];
+        catSelect.DataSource = catDataSet.Tables[0];
         catSelect.DataValueField = "ID";
         catSelect.DataTextField = "Category";
         catSelect.DataBind();
@@ -78,7 +76,7 @@
         this.uiTime = Request.Form["databaseTime"].ToString();
         string getTime = Session["saveTime"].ToString();
         int saveTime = Convert.ToInt32(getTime);
-        using (OleDbConnection connection = new OleDbConnection(Global.connectionString))
+        using (OleDbConnection connection = new OleDbConnection(connectionString))
         using (OleDbCommand cmd = new OleDbCommand("INSERT INTO Speedruns ([UserID],[Time],[TimeUI],[Category]) " + "VALUES (?, ?, ?, ?)", connection))
         {
             Button origin = sender as Button;
